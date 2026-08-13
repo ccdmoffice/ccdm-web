@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCDM Data Management System</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Variables - Clean Light Theme */
+        :root {
+            --bg-body: #F3F5F9;
+            --sidebar-bg: #FFFFFF;
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 80px;
+            --text-main: #2D3748;
+            --text-muted: #A0AEC0;
+            --accent-orange: #F6AD55;
+            --accent-orange-light: #FFFAF0;
+            --card-bg: #FFFFFF;
+            --border-color: #E2E8F0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Sidebar Styling --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            min-height: 100vh;
+            position: fixed;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.02);
+        }
+
+        /* Sidebar Collapsed State */
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-brand {
+            padding: 30px 20px 20px;
+            display: flex;
+            align-items: center;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar-brand .logo-icon {
+            font-size: 1.8rem;
+            color: var(--accent-orange);
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .sidebar-brand .logo-text {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-left: 10px;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            display: none;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            padding: 12px 15px;
+            margin: 8px 15px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .nav-link i {
+            font-size: 1.3rem;
+            min-width: 30px;
+            text-align: center;
+            transition: margin 0.3s;
+        }
+
+        .nav-link .nav-text {
+            margin-left: 10px;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar.collapsed .nav-text {
+            opacity: 0;
+            display: none;
+        }
+
+        /* ปรับไอคอนให้อยู่ตรงกลางเวลาพับเมนู */
+        .sidebar.collapsed .nav-link i {
+            margin: 0 auto;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--accent-orange-light);
+            color: var(--accent-orange);
+            font-weight: 600;
+        }
+
+        /* Toggle Button */
+        .toggle-btn {
+            position: absolute;
+            right: -15px;
+            top: 40px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            color: var(--text-muted);
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+        
+        .toggle-btn:hover {
+            color: var(--accent-orange);
+            transform: scale(1.1);
+        }
+
+        /* User Profile in Sidebar */
+        .sidebar-user {
+            margin-top: auto;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .sidebar-user img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            min-width: 35px;
+        }
+        .user-info {
+            margin-left: 12px;
+            transition: opacity 0.3s;
+        }
+        .sidebar.collapsed .user-info {
+            opacity: 0;
+            display: none;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 40px 50px;
+            transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        .page-header h2 {
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+        }
+
+        /* Clean Card Styling */
+        .clean-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            padding: 35px;
+            margin-bottom: 30px;
+        }
+
+        /* Form & Upload Area */
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            background-color: #F8FAFC;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 3px rgba(246, 173, 85, 0.15);
+            background-color: #fff;
+        }
+
+        .upload-area {
+            border: 2px dashed #CBD5E1;
+            border-radius: 16px;
+            padding: 50px 20px;
+            text-align: center;
+            background-color: #F8FAFC;
+            transition: all 0.3s;
+            position: relative;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: var(--accent-orange);
+            background-color: var(--accent-orange-light);
+        }
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .btn-orange {
+            background-color: var(--accent-orange);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 12px 24px;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-orange:hover {
+            background-color: #DD6B20;
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        /* Sections */
+        .content-section { display: none; }
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <!-- ปุ่ม Toggle พับ/กางเมนู -->
+        <div class="toggle-btn" onclick="toggleSidebar()">
+            <i class="bi bi-chevron-left" id="toggleIcon"></i>
+        </div>
+
+        <div class="sidebar-brand">
+            <i class="bi bi-heptagon-fill logo-icon"></i>
+            <span class="logo-text">CCDM App</span>
+        </div>
+        
+        <ul class="nav flex-column mt-4">
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="switchMenu('dashboard', this)">
+                    <i class="bi bi-house-door"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="switchMenu('report-manage', this)">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span class="nav-text">Data Ingestion</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="switchMenu('report-view', this)">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span class="nav-text">Reports Hub</span>
+                </a>
+            </li>
+
+            <li class="nav-item mt-4">
+                <a class="nav-link" href="#" onclick="switchMenu('settings', this)">
+                    <i class="bi bi-gear"></i>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-user">
+            <img src="https://ui-avatars.com/api/?name=User&background=F6AD55&color=fff" alt="User">
+            <div class="user-info">
+                <div style="font-size: 0.85rem; font-weight: 600;">Admin User</div>
+                <div style="font-size: 0.75rem; color: #A0AEC0;">admin@ccdm.org</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="content-section">
+            <div class="page-header">
+                <h2>Dashboard Overview</h2>
+            </div>
+            <div class="clean-card text-center py-5">
+                <i class="bi bi-pie-chart fs-1 text-muted mb-3 d-block"></i>
+                <h5 class="text-muted">Analytics Dashboard (Coming Soon)</h5>
+            </div>
+        </div>
+
+        <!-- Data Ingestion Section (Upload Form) -->
+        <div id="report-manage" class="content-section active">
+            <div class="page-header">
+                <h2>Upload Datasets</h2>
+            </div>
+            
+            <div class="clean-card">
+                <form id="uploadForm">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Data Year (ปีฐานข้อมูล)</label>
+                            <input type="number" class="form-control" id="dataYear" placeholder="e.g., 2569" required>
+                        </div>
+                        <div class="col-md-6 mt-3 mt-md-0">
+                            <label class="form-label">Report Type (ประเภทไฟล์)</label>
+                            <select class="form-select" id="reportType" required>
+                                <option value="">Select Dataset Type...</option>
+                                <option value="population_db">Population Data (ประชากร)</option>
+                                <option value="household_db">Household Data (ครัวเรือน)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="upload-area mb-4">
+                        <input type="file" id="fileInput" accept=".csv" required>
+                        <i class="bi bi-cloud-arrow-up text-muted fs-1"></i>
+                        <h5 class="mt-3" style="color: #4A5568;">Click or drag CSV file to upload</h5>
+                        <p class="text-muted mb-0" style="font-size: 0.85rem;">Only .csv files are supported for BigQuery ingestion</p>
+                        <div id="fileNameDisplay" class="mt-3 fw-bold text-success" style="display: none;"></div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-orange px-5" id="submitBtn">
+                            <i class="bi bi-send me-2"></i> Sync to Pipeline
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="statusMessage" class="mt-4 text-center rounded p-3" style="display: none; font-weight: 500;"></div>
+            </div>
+        </div>
+
+        <!-- Reports Hub Section -->
+        <div id="report-view" class="content-section">
+            <div class="page-header">
+                <h2>Reports Hub</h2>
+            </div>
+            <div class="clean-card text-center py-5">
+                <i class="bi bi-layout-text-window fs-1 text-muted mb-3 d-block"></i>
+                <h5 class="text-muted">Looker Studio Integration (Pending)</h5>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="content-section">
+            <div class="page-header">
+                <h2>Access Control</h2>
+            </div>
+            <div class="clean-card text-center py-5">
+                <i class="bi bi-shield-lock fs-1 text-muted mb-3 d-block"></i>
+                <h5 class="text-muted">Role-based Access Control settings</h5>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // --- 1. ระบบพับ/กาง Sidebar ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggleIcon');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            // เปลี่ยนไอคอนลูกศร ซ้าย/ขวา
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        }
+
+        // --- 2. ระบบสลับเมนู ---
+        function switchMenu(sectionId, clickedElement) {
+            document.querySelectorAll('.content-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(sectionId).classList.add('active');
+            clickedElement.classList.add('active');
+        }
+
+        // --- 3. แสดงชื่อไฟล์ตอนเลือกไฟล์เสร็จ ---
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            if (this.files[0]) {
+                fileNameDisplay.style.display = 'block';
+                fileNameDisplay.innerHTML = `<i class="bi bi-file-earmark-check me-1"></i> File ready: ${this.files[0].name}`;
+            } else {
+                fileNameDisplay.style.display = 'none';
+            }
+        });
+
+        // --- 4. ระบบอัปโหลดไฟล์ไปยัง GAS (รวมระบบอ่าน CSV และเช็กข้อมูลซ้ำ) ---
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzXytNYNLrHMLErN7EfIJcnfrwSWGo1XrTEjzn7kw_vdeEDTM9BgszFilrcC-G5xj3jCA/exec"; 
+
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const btn = document.getElementById('submitBtn');
+            const statusDiv = document.getElementById('statusMessage');
+            const dataYear = document.getElementById('dataYear').value;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Reading File...';
+            statusDiv.style.display = "none";
+
+            // ---------------------------------------------------------
+            // ฟังก์ชัน A: กระบวนการอัปโหลดไฟล์จริง (จะถูกเรียกเมื่อกดยืนยันแล้ว)
+            // ---------------------------------------------------------
+            const proceedToUpload = () => {
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+                
+                const uploadReader = new FileReader();
+                uploadReader.onload = function(event) {
+                    const base64Data = event.target.result.split(',')[1];
+                    
+                    const formData = new URLSearchParams();
+                    formData.append('dataYear', dataYear);
+                    formData.append('reportType', document.getElementById('reportType').value);
+                    formData.append('fileName', file.name);
+                    formData.append('fileContent', base64Data);
+
+                    fetch(WEB_APP_URL, { method: 'POST', body: formData })
+                    .then(response => response.json())
+                    .then(data => {
+                        statusDiv.style.display = "block";
+                        if (data.status === "success") {
+                            statusDiv.className = "mt-4 text-center rounded p-3 text-success";
+                            statusDiv.style.backgroundColor = "#F0FFF4";
+                            statusDiv.style.border = "1px solid #C6F6D5";
+                            statusDiv.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Upload Completed!';
+                            document.getElementById('uploadForm').reset();
+                            document.getElementById('fileNameDisplay').style.display = 'none';
+                        } else {
+                            statusDiv.className = "mt-4 text-center rounded p-3 text-danger";
+                            statusDiv.style.backgroundColor = "#FFF5F5";
+                            statusDiv.style.border = "1px solid #FED7D7";
+                            statusDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-2"></i> Error: ' + data.message;
+                        }
+                    })
+                    .catch(error => {
+                        statusDiv.style.display = "block";
+                        statusDiv.className = "mt-4 text-center rounded p-3 text-danger";
+                        statusDiv.style.backgroundColor = "#FFF5F5";
+                        statusDiv.style.border = "1px solid #FED7D7";
+                        statusDiv.innerHTML = '<i class="bi bi-wifi-off me-2"></i> Connection Failed';
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
+                    });
+                };
+                uploadReader.readAsDataURL(file);
+            };
+
+            // ---------------------------------------------------------
+            // ฟังก์ชัน B: แอบอ่าน CSV ฝั่งหน้าบ้าน เพื่อเอาไปเช็ก (Pre-flight Check)
+            // ---------------------------------------------------------
+            const checkReader = new FileReader();
+            checkReader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                
+                if (lines.length > 1) {
+                    // ตัวอ่านบรรทัด CSV ที่รองรับเครื่องหมาย " "
+                    const parseCSVLine = (line) => {
+                        let ret = [], keep = false, value = '';
+                        for (let i = 0; i < line.length; i++) {
+                            let ch = line[i];
+                            if (ch === '"') keep = !keep;
+                            else if (ch === ',' && !keep) { ret.push(value.trim().replace(/^"|"$/g, '')); value = ''; }
+                            else value += ch;
+                        }
+                        ret.push(value.trim().replace(/^"|"$/g, ''));
+                        return ret;
+                    };
+
+                    const headers = parseCSVLine(lines[0]).map(h => h.trim());
+
+                    // ⚠️ จุดที่ต้องระบุ: ใส่ชื่อคอลัมน์จากไฟล์ CSV ดิบของคุณให้ตรงเป๊ะ
+                    const areaColName = "ชื่อ อปท."; // <--- แก้ไขให้ตรงกับหัวคอลัมน์พื้นที่/อบต. ในไฟล์
+                    const villageColName = "ชื่อหมู่บ้าน"; // <--- แก้ไขให้ตรงกับหัวคอลัมน์ชื่อหมู่บ้าน ในไฟล์
+
+                    const areaIndex = headers.indexOf(areaColName);
+                    const villageIndex = headers.indexOf(villageColName);
+
+                    let areaName = "ไม่ทราบพื้นที่ (หาคอลัมน์ไม่พบ)";
+                    let villageSet = new Set();
+
+                    if (areaIndex !== -1 && villageIndex !== -1) {
+                        for (let i = 1; i < lines.length; i++) {
+                            if (lines[i].trim() === '') continue;
+                            let cols = parseCSVLine(lines[i]);
+                            if (cols.length > Math.max(areaIndex, villageIndex)) {
+                                if (areaName === "ไม่ทราบพื้นที่ (หาคอลัมน์ไม่พบ)" && cols[areaIndex]) areaName = cols[areaIndex];
+                                if (cols[villageIndex]) villageSet.add(cols[villageIndex]);
+                            }
+                        }
+                    }
+
+                    let villagesArr = Array.from(villageSet);
+                    let villagesString = villagesArr.join(',');
+
+                    // วิ่งไปถาม Apps Script ว่าข้อมูลชุดนี้ซ้ำไหม
+                    if (typeof google !== 'undefined' && google.script && google.script.run) {
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking Duplicates...';
+                        
+                        google.script.run
+                            .withSuccessHandler(function(result) {
+                                // สร้างข้อความแจ้งเตือน Popup
+                                let msg = `📌 ไฟล์นี้เป็นข้อมูลของ: ${areaName}\n`;
+                                msg += `มีข้อมูลทั้งหมด: ${villagesArr.length} หมู่บ้าน\n\n`;
+
+                                if (result.hasDuplicate) {
+                                    msg += `⚠️ คำเตือน: พบหมู่บ้านที่เคยอัปโหลดสำเร็จแล้วในปี ${dataYear} ดังนี้:\n- ` + 
+                                              result.duplicates.join("\n- ") + 
+                                              `\n\nคุณต้องการอัปโหลดไฟล์นี้เพื่อ "แทนที่" ข้อมูลเดิมทั้งหมดหรือไม่?`;
+                                } else {
+                                    msg += `(ยังไม่เคยมีการอัปโหลดข้อมูลพื้นที่นี้ในปี ${dataYear})\n\nกดยืนยันเพื่อเริ่มกระบวนการอัปโหลด`;
+                                }
+
+                                // แสดง Popup ให้ผู้ใช้ตัดสินใจ
+                                if (confirm(msg)) {
+                                    proceedToUpload(); // กดยืนยัน -> ลุยต่อ
+                                } else {
+                                    // กดยกเลิก -> คืนค่าปุ่ม
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
+                                }
+                            })
+                            .withFailureHandler(function(error) {
+                                alert("เกิดข้อผิดพลาดในการตรวจสอบข้อมูล: " + error.message);
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
+                            })
+                            .checkDuplicateVillages(villagesString, dataYear); 
+                    } else {
+                        proceedToUpload();
+                    }
+                }
+            };
+            
+            // สั่งให้อ่านไฟล์เป็น Text ก่อน เพื่อดึงข้อมูลมาทำ Popup
+            checkReader.readAsText(file, "UTF-8"); 
+        });
+    </script>
+</body>
+</html>
