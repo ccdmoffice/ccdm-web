@@ -558,41 +558,19 @@
                     let villagesArr = Array.from(villageSet);
                     let villagesString = villagesArr.join(',');
 
-                    // วิ่งไปถาม Apps Script ว่าข้อมูลชุดนี้ซ้ำไหม
-                    if (typeof google !== 'undefined' && google.script && google.script.run) {
-                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking Duplicates...';
-                        
-                        google.script.run
-                            .withSuccessHandler(function(result) {
-                                // สร้างข้อความแจ้งเตือน Popup
-                                let msg = `📌 ไฟล์นี้เป็นข้อมูลของ: ${areaName}\n`;
-                                msg += `มีข้อมูลทั้งหมด: ${villagesArr.length} หมู่บ้าน\n\n`;
+                    // สร้างข้อความแจ้งเตือน Popup (แสดงข้อมูลที่อ่านได้จากไฟล์)
+                    let msg = `📌 ตรวจสอบข้อมูลก่อนอัปโหลด:\n\n`;
+                    msg += `🏢 พื้นที่: ${areaName}\n`;
+                    msg += `🏘️ จำนวนข้อมูล: ${villagesArr.length} หมู่บ้าน\n\n`;
+                    msg += `กดยืนยันเพื่อเริ่มกระบวนการอัปโหลดข้อมูลนี้เข้าสู่ระบบ`;
 
-                                if (result.hasDuplicate) {
-                                    msg += `⚠️ คำเตือน: พบหมู่บ้านที่เคยอัปโหลดสำเร็จแล้วในปี ${dataYear} ดังนี้:\n- ` + 
-                                              result.duplicates.join("\n- ") + 
-                                              `\n\nคุณต้องการอัปโหลดไฟล์นี้เพื่อ "แทนที่" ข้อมูลเดิมทั้งหมดหรือไม่?`;
-                                } else {
-                                    msg += `(ยังไม่เคยมีการอัปโหลดข้อมูลพื้นที่นี้ในปี ${dataYear})\n\nกดยืนยันเพื่อเริ่มกระบวนการอัปโหลด`;
-                                }
-
-                                // แสดง Popup ให้ผู้ใช้ตัดสินใจ
-                                if (confirm(msg)) {
-                                    proceedToUpload(); // กดยืนยัน -> ลุยต่อ
-                                } else {
-                                    // กดยกเลิก -> คืนค่าปุ่ม
-                                    btn.disabled = false;
-                                    btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
-                                }
-                            })
-                            .withFailureHandler(function(error) {
-                                alert("เกิดข้อผิดพลาดในการตรวจสอบข้อมูล: " + error.message);
-                                btn.disabled = false;
-                                btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
-                            })
-                            .checkDuplicateVillages(villagesString, dataYear); 
+                    // แสดง Popup ให้ผู้ใช้ตัดสินใจ
+                    if (confirm(msg)) {
+                        proceedToUpload(); // กดยืนยัน -> สั่งอัปโหลด (Fetch ไปที่ GAS)
                     } else {
-                        proceedToUpload();
+                        // กดยกเลิก -> คืนค่าปุ่มให้กลับมาพร้อมกดใหม่
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
                     }
                 }
             };
@@ -600,6 +578,7 @@
             // สั่งให้อ่านไฟล์เป็น Text ก่อน เพื่อดึงข้อมูลมาทำ Popup
             checkReader.readAsText(file, "UTF-8"); 
         });
+
     </script>
 </body>
 </html>
