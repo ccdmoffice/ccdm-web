@@ -558,20 +558,49 @@
                     let villagesArr = Array.from(villageSet);
                     let villagesString = villagesArr.join(',');
 
-                    // สร้างข้อความแจ้งเตือน Popup (แสดงข้อมูลที่อ่านได้จากไฟล์)
-                    let msg = `📌 ตรวจสอบข้อมูลก่อนอัปโหลด:\n\n`;
-                    msg += `🏢 พื้นที่: ${areaName}\n`;
-                    msg += `🏘️ จำนวนข้อมูล: ${villagesArr.length} หมู่บ้าน\n\n`;
-                    msg += `กดยืนยันเพื่อเริ่มกระบวนการอัปโหลดข้อมูลนี้เข้าสู่ระบบ`;
+                    // ยิง Fetch ไปถาม Google Apps Script ว่าข้อมูลซ้ำไหม
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking Duplicates...';
+                    
+                    const checkFormData = new URLSearchParams();
+                    checkFormData.append('action', 'checkDuplicate'); // ส่งพารามิเตอร์บอกหลังบ้านว่าขอเช็กชื่อ
+                    checkFormData.append('dataYear', dataYear);
+                    checkFormData.append('villages', villagesString);
 
-                    // แสดง Popup ให้ผู้ใช้ตัดสินใจ
-                    if (confirm(msg)) {
-                        proceedToUpload(); // กดยืนยัน -> สั่งอัปโหลด (Fetch ไปที่ GAS)
-                    } else {
-                        // กดยกเลิก -> คืนค่าปุ่มให้กลับมาพร้อมกดใหม่
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
-                    }
+                    fetch(WEB_APP_URL, { method: 'POST', body: checkFormData })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === "error") {
+                                throw new Error(data.message);
+                            }
+                            
+                            let result = data.data; // ผลลัพธ์ที่ได้กลับมาจากหลังบ้าน
+                            
+                            // สร้างข้อความแจ้งเตือน Popup
+                            let msg = `📌 ไฟล์นี้เป็นข้อมูลของ: ${areaName}\n`;
+                            msg += `มีข้อมูลทั้งหมด: ${villagesArr.length} หมู่บ้าน\n\n`;
+
+                            if (result.hasDuplicate) {
+                                msg += `⚠️ คำเตือน: พบหมู่บ้านที่เคยอัปโหลดสำเร็จแล้วในปี ${dataYear} ดังนี้:\n- ` + 
+                                          result.duplicates.join("\n- ") + 
+                                          `\n\nคุณต้องการอัปโหลดไฟล์นี้เพื่อ "แทนที่" ข้อมูลเดิมทั้งหมดหรือไม่?`;
+                            } else {
+                                msg += `(ยังไม่เคยมีการอัปโหลดข้อมูลพื้นที่นี้ในปี ${dataYear})\n\nกดยืนยันเพื่อเริ่มกระบวนการอัปโหลด`;
+                            }
+
+                            // แสดง Popup ให้ผู้ใช้ตัดสินใจ
+                            if (confirm(msg)) {
+                                proceedToUpload(); // กดยืนยัน -> ลุยอัปโหลดไฟล์ใหญ่ต่อ
+                            } else {
+                                // กดยกเลิก -> คืนค่าปุ่ม
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
+                            }
+                        })
+                        .catch(error => {
+                            alert("เกิดข้อผิดพลาดในการตรวจสอบข้อมูล: " + error.message);
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-send me-2"></i> Sync to Pipeline';
+                        });
                 }
             };
             
