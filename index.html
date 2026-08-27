@@ -504,8 +504,14 @@
                 const uploadReader = new FileReader();
                 uploadReader.onload = function(event) {
                     const base64Data = event.target.result.split(',')[1];
+
+                    let dataYear = document.getElementById('dataYear').value;
+                    let region = document.getElementById('regionType').value;
                     
                     const formData = new URLSearchParams();
+                    // 🟢 เพิ่มบรรทัดนี้เพื่อดึงค่าปี พ.ศ. จากช่องกรอกบนหน้าเว็บ
+                    const dataYear = document.getElementById('dataYear').value;
+                    
                     formData.append('dataYear', dataYear);
                     formData.append('region', document.getElementById('regionType').value); // 🟢 เพิ่มบรรทัดนี้
                     formData.append('reportType', document.getElementById('reportType').value);
