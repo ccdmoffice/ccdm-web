@@ -348,11 +348,24 @@
             <div class="clean-card">
                 <form id="uploadForm">
                     <div class="row mb-4">
-                        <div class="col-md-6">
+                        <!-- ช่องเลือกปี -->
+                        <div class="col-md-4">
                             <label class="form-label">Data Year (ปีฐานข้อมูล)</label>
                             <input type="number" class="form-control" id="dataYear" placeholder="e.g., 2569" required>
                         </div>
-                        <div class="col-md-6 mt-3 mt-md-0">
+                        <!-- ช่องเลือกภาค (เพิ่มใหม่) -->
+                        <div class="col-md-4 mt-3 mt-md-0">
+                            <label class="form-label">Region (ภูมิภาค)</label>
+                                <select class="form-select" id="regionType" required>
+                                    <option value="">เลือกภูมิภาค...</option>
+                                    <option value="ภาคเหนือ">ภาคเหนือ</option>
+                                    <option value="ภาคตะวันออกเฉียงเหนือ">ภาคตะวันออกเฉียงเหนือ</option>
+                                    <option value="ภาคกลาง">ภาคกลาง</option>
+                                    <option value="ภาคใต้">ภาคใต้</option>
+                                </select>
+                        </div>
+                        <!-- ช่องเลือกประเภทไฟล์ -->
+                        <div class="col-md-4 mt-3 mt-md-0">
                             <label class="form-label">Report Type (ประเภทไฟล์)</label>
                             <select class="form-select" id="reportType" required>
                                 <option value="">Select Dataset Type...</option>
@@ -494,8 +507,8 @@
                     
                     const formData = new URLSearchParams();
                     formData.append('dataYear', dataYear);
+                    formData.append('region', document.getElementById('regionType').value); // 🟢 เพิ่มบรรทัดนี้
                     formData.append('reportType', document.getElementById('reportType').value);
-                    formData.append('fileName', file.name);
                     formData.append('fileContent', base64Data);
 
                     fetch(WEB_APP_URL, { method: 'POST', body: formData })
